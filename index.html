@@ -457,7 +457,7 @@
     
     <!-- Main App -->
     <div class="app" id="app">
-      <div class="search-container">
+      <div class="search-container" id="searchContainer">
         <input type="text" class="search-input" id="searchInput" placeholder="Search any topic or verse...">
         <div class="search-results" id="searchResults"></div>
       </div>
@@ -556,6 +556,7 @@
       // Show main layout when user selects a verse
       document.getElementById('mainLayout').style.display = 'flex';
       document.getElementById('app').classList.add('active');
+      document.getElementById('searchContainer').style.display = 'none';
       
       // Show loading in passage card
       document.getElementById('passageCard').style.display = 'block';
@@ -721,6 +722,7 @@ Give ONE short, thought-provoking insight (1 sentence). Then ask them what quest
       // Show main layout if not visible
       document.getElementById('mainLayout').style.display = 'flex';
       document.getElementById('app').classList.add('active');
+      document.getElementById('searchContainer').style.display = 'none';
       
       // Update passage on left
       passageData = { ref: ref, text: text };
