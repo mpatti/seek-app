@@ -401,8 +401,8 @@
     let passageData = null;
     
     // ESV API Config
-    const ESV_API_KEY = 'YOUR_ESV_KEY';
-    const OPENAI_KEY = 'YOUR_OPENAI_KEY';
+    const ESV_API_KEY = process.env.ESV_API_KEY || '';
+    const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
     
     // Daily passages (for demo - would be fetched or rotated)
     const passages = [
