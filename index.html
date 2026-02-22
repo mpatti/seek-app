@@ -320,6 +320,11 @@
   </style>
 </head>
 <body>
+  <!-- Vercel will inject env vars here - or add manually -->
+  <script>
+    // For Vercel: Add your keys here, or set window.__ENV__ in Vercel dashboard
+    window.__ENV__ = window.__ENV__ || {};
+  </script>
   <div class="container">
     <header>
       <div class="logo">Seek<span>.</span></div>
@@ -418,6 +423,8 @@
       const index = today.getDate() % passages.length;
       return passages[index];
     }
+    
+    document.addEventListener('DOMContentLoaded', () => {
     
     // Onboarding Logic
     document.querySelectorAll('.option-btn').forEach(btn => {
@@ -556,6 +563,7 @@ As a thoughtful, wise friend (Keller/Begg/Turek/Graham style), answer their ques
         alert('Link copied to clipboard!');
       }
     });
+    }); // End DOMContentLoaded
   </script>
 </body>
 </html>
