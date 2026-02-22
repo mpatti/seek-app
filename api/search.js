@@ -13,8 +13,6 @@ module.exports = async function handler(req, res) {
 
   const query = req.query.q || req.body?.q || '';
   
-  console.log('Search query:', query);
-  
   if (!query) {
     return res.status(400).json({ error: 'Missing query' });
   }
@@ -22,49 +20,78 @@ module.exports = async function handler(req, res) {
   try {
     const apiKey = process.env.ESV_API_KEY;
     
-    // Search ESV API
-    const searchUrl = `https://api.esv.org/v3/passage/search/?q=${encodeURIComponent(query)}&per_page=10`;
+    // Try passage text endpoint first (works for specific references like "John 3:16")
+    let passages = [];
+    let reference = query;
     
-    const response = await fetch(searchUrl, {
-      headers: {
-        'Authorization': apiKey
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`ESV API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    // Format results
-    const results = data.results || [];
-    const formatted = await Promise.all(results.map(async (r) => {
-      // Try to get full passage text
-      let fullText = '';
-      try {
-        const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(r.reference)}&include-passage-references=false&include-footnotes=false`;
-        const passageRes = await fetch(passageUrl, {
-          headers: { 'Authorization': apiKey }
-        });
-        if (passageRes.ok) {
-          const passageData = await passageRes.json();
-          fullText = passageData.passages ? passageData.passages[0] : '';
-        }
-      } catch (e) {
-        // Fall back to preview
-      }
+    try {
+      const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(query)}&include-passage-references=false&include-footnotes=false&include-heading-titles=false`;
+      const passageRes = await fetch(passageUrl, {
+        headers: { 'Authorization': apiKey }
+      });
       
-      return {
-        reference: r.reference,
-        preview: fullText || (r.content.substring(0, 300) + (r.content.length > 300 ? '...' : '')),
-        text: fullText || r.content
-      };
-    }));
-
-    res.status(200).json({ results: formatted, query });
+      if (passageRes.ok) {
+        const passageData = await passageRes.json();
+        if (passageData.passages && passageData.passages.length > 0) {
+          passages = passageData.passages;
+          // Try to extract reference from the passage data
+          if (passageData.canonical) {
+            reference = passageData.canonical;
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Passage lookup failed, trying search:', e.message);
+    }
+    
+    // If no passage found, try search
+    if (passages.length === 0) {
+      const searchUrl = `https://api.esv.org/v3/passage/search/?q=${encodeURIComponent(query)}&per_page=5`;
+      const searchRes = await fetch(searchUrl, {
+        headers: { 'Authorization': apiKey }
+      });
+      
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        if (searchData.results && searchData.results.length > 0) {
+          // Get the first result's full text
+          const firstResult = searchData.results[0];
+          reference = firstResult.reference;
+          
+          try {
+            const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(firstResult.reference)}&include-passage-references=false&include-footnotes=false&include-heading-titles=false`;
+            const passageRes = await fetch(passageUrl, {
+              headers: { 'Authorization': apiKey }
+            });
+            if (passageRes.ok) {
+              const passageData = await passageRes.json();
+              if (passageData.passages) {
+                passages = passageData.passages;
+              }
+            }
+          } catch (e) {
+            passages = [firstResult.content];
+          }
+        }
+      }
+    }
+    
+    if (passages.length === 0) {
+      return res.status(200).json({ results: [], query });
+    }
+    
+    const fullText = passages.join('\n\n');
+    
+    res.status(200).json({ 
+      results: [{
+        reference: reference,
+        text: fullText,
+        preview: fullText.substring(0, 300) + (fullText.length > 300 ? '...' : '')
+      }], 
+      query 
+    });
   } catch (error) {
-    console.error('ESV search error:', error);
+    console.error('ESV error:', error);
     res.status(500).json({ error: error.message });
   }
 };
