@@ -335,6 +335,24 @@
       margin-right: 4px;
     }
     
+    .context-btn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: var(--card-hover);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .context-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
     /* Commentary */
     .commentary-card {
       background: var(--card);
@@ -551,6 +569,7 @@
             <div class="passage-label" id="passageLabel">📖 Passage of the Day</div>
             <div class="passage-reference" id="passageRef">Loading...</div>
             <div class="passage-text" id="passageText">...</div>
+            <button class="context-btn" id="contextBtn" onclick="loadFullChapter()" style="display:none;">📖 Show Full Chapter</button>
           </div>
         </div>
         
@@ -699,6 +718,13 @@
           document.getElementById('passageRef').textContent = passageData.ref;
           document.getElementById('passageText').innerHTML = passageData.text;
           
+          // Show "Show Full Chapter" button
+          const chapterRef = extractChapter(reference);
+          if (chapterRef) {
+            window.currentChapterRef = chapterRef;
+            document.getElementById('contextBtn').style.display = 'block';
+          }
+          
           // Start chat for the searched passage
           await startChat();
         } else {
@@ -716,9 +742,50 @@
       document.getElementById('passageLabel').textContent = '📖 Passage of the Day';
       document.getElementById('passageRef').textContent = passageData.ref;
       document.getElementById('passageText').innerHTML = passageData.text;
+      document.getElementById('contextBtn').style.display = 'none';
       
       // Start chat with a brief opener
       await startChat();
+    }
+    
+    // Extract chapter reference from verse (e.g., "John 3:16" -> "John 3")
+    function extractChapter(ref) {
+      // Match patterns like "John 3:16", "Psalm 23:1", "Romans 8:28"
+      const match = ref.match(/^(\d?\s*[A-Za-z]+)\s+(\d+)(?::\d+)?/);
+      if (match) {
+        return match[1] + ' ' + match[2];
+      }
+      return null;
+    }
+    
+    // Load full chapter when user clicks the button
+    async function loadFullChapter() {
+      if (!window.currentChapterRef) return;
+      
+      const btn = document.getElementById('contextBtn');
+      btn.textContent = 'Loading...';
+      
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(window.currentChapterRef)}`);
+        const data = await response.json();
+        
+        if (data.error) throw new Error(data.error);
+        
+        if (data.results && data.results[0]) {
+          passageData = {
+            ref: data.results[0].reference,
+            text: data.results[0].text
+          };
+          document.getElementById('passageRef').textContent = passageData.ref;
+          document.getElementById('passageText').innerHTML = passageData.text;
+          btn.textContent = '✓ Showing Full Chapter';
+          btn.style.background = 'var(--accent)';
+          btn.style.color = 'white';
+        }
+      } catch (error) {
+        console.error('Error loading chapter:', error);
+        btn.textContent = 'Error loading chapter';
+      }
     }
     
     // Start chat with brief opener
@@ -869,6 +936,10 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
       document.getElementById('searchInput').value = '';
       document.getElementById('searchResults').innerHTML = '';
       document.getElementById('chatMessages').innerHTML = '';
+      document.getElementById('contextBtn').style.display = 'none';
+      document.getElementById('contextBtn').textContent = '📖 Show Full Chapter';
+      document.getElementById('contextBtn').style.background = '';
+      document.getElementById('contextBtn').style.color = '';
       chatHistory = [];
     }
     
