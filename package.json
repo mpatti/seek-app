@@ -2,7 +2,7 @@
   "name": "seek-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "sed -e 's/ESV_API_KEY_PLACEHOLDER/'\"$ESV_API_KEY\"'/g' -e 's/OPENAI_API_KEY_PLACEHOLDER/'\"$OPENAI_API_KEY\"'/g' index.html > dist/index.html"
+    "build": "mkdir -p dist && sed -e 's/ESV_API_KEY_PLACEHOLDER/'\"$ESV_API_KEY\"'/g' -e 's/OPENAI_API_KEY_PLACEHOLDER/'\"$OPENAI_API_KEY\"'/g' index.html > dist/index.html"
   },
   "files": [
     "dist"
