@@ -37,9 +37,27 @@ module.exports = async function handler(req, res) {
     
     // Format results
     const results = data.results || [];
-    const formatted = results.map(r => ({
-      reference: r.reference,
-      preview: r.content.substring(0, 200) + (r.content.length > 200 ? '...' : '')
+    const formatted = await Promise.all(results.map(async (r) => {
+      // Try to get full passage text
+      let fullText = '';
+      try {
+        const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(r.reference)}&include-passage-references=false&include-footnotes=false`;
+        const passageRes = await fetch(passageUrl, {
+          headers: { 'Authorization': apiKey }
+        });
+        if (passageRes.ok) {
+          const passageData = await passageRes.json();
+          fullText = passageData.passages ? passageData.passages[0] : '';
+        }
+      } catch (e) {
+        // Fall back to preview
+      }
+      
+      return {
+        reference: r.reference,
+        preview: fullText || (r.content.substring(0, 300) + (r.content.length > 300 ? '...' : '')),
+        text: fullText || r.content
+      };
     }));
 
     res.status(200).json({ results: formatted, query });
