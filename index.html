@@ -414,9 +414,6 @@
     const ESV_API_KEY = window.ESV_API_KEY || '';
     const OPENAI_KEY = window.OPENAI_API_KEY || '';
     
-    console.log('ESV key:', ESV_API_KEY ? 'SET' : 'MISSING');
-    console.log('OpenAI key:', OPENAI_KEY ? 'SET (' + OPENAI_KEY.length + ' chars)' : 'MISSING');
-    
     // Daily passages (for demo - would be fetched or rotated)
     const passages = [
       { ref: "John 3:16-21", text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life. For God did not send his Son into the world to condemn the world, but in order that the world might be saved through him. Whoever believes in him is not condemned, but whoever does not believe is condemned already, because he has not believed in the name of the only Son of God. And this is the judgment: the light has come into the world, and people loved the darkness rather than the light because their works were evil. For everyone who does wicked things hates the light and does not come to the light, lest his works should be exposed. But whoever does what comes to the light to clearly that his works have been carried out in God." },
@@ -485,22 +482,20 @@ Write 2-3 paragraphs that:
 
 Keep it conversational, not preachy. Don't say "accept Jesus." Just explain truth.`;
         
-        // Using OpenAI
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Using OpenAI via proxy
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_KEY}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 500
+            prompt: prompt
           })
         });
         
         const data = await response.json();
-        commentaryEl.textContent = data.choices[0].message.content;
+        if (data.error) throw new Error(data.error);
+        commentaryEl.textContent = data.content;
       } catch (error) {
         console.error('Error:', error);
         commentaryEl.textContent = 'Could not load commentary. Try again soon.';
@@ -534,22 +529,20 @@ The user asks: "${message}"
 
 As a thoughtful, wise friend (Keller/Begg/Turek/Graham style), answer their question about this passage. Keep it conversational, honest, not preachy.`;
         
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_KEY}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 400
+            prompt: prompt
           })
         });
         
         const data = await response.json();
+        if (data.error) throw new Error(data.error);
         const lastMsg = messages.querySelector('.chat-message:last-child');
-        lastMsg.textContent = data.choices[0].message.content;
+        lastMsg.textContent = data.content;
       } catch (error) {
         const lastMsg = messages.querySelector('.chat-message:last-child');
         lastMsg.textContent = 'Could not get a response. Try again.';
