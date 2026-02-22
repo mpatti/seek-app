@@ -548,14 +548,19 @@
     // Start chat with brief opener
     async function startChat() {
       const messages = document.getElementById('chatMessages');
-      messages.innerHTML = '<div class="chat-message ai">Thinking...</div>';
+      messages.innerHTML = '';
+      
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'chat-message ai';
+      aiMsg.textContent = 'Thinking...';
+      messages.appendChild(aiMsg);
       
       try {
         const prompt = `You are chatting with someone about this Bible passage: ${passageData.ref}
 
 The passage says: "${passageData.text.substring(0, 500)}..."
 
-Start the conversation with 1-2 concise, thought-provoking sentences. No preamble. Just jump in with something that makes them think. Be conversational, warm, real.`;
+Share 1-2 concise insights about what this passage means. Don't use quotes. Don't ask "isn't that interesting?" Just state something thought-provoking and invite their thoughts. Be conversational, warm, real.`;
         
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -567,10 +572,18 @@ Start the conversation with 1-2 concise, thought-provoking sentences. No preambl
         
         if (data.error) throw new Error(data.error);
         
-        messages.innerHTML = `<div class="chat-message ai">${data.content}</div>`;
+        messages.removeChild(messages.querySelector('.chat-message.ai'));
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai';
+        aiMsg.textContent = data.content;
+        messages.appendChild(aiMsg);
       } catch (error) {
         console.error('Error:', error);
-        messages.innerHTML = '<div class="chat-message ai">What stands out to you about this passage?</div>';
+        messages.removeChild(messages.querySelector('.chat-message.ai'));
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai';
+        aiMsg.textContent = 'What stands out to you about this passage?';
+        messages.appendChild(aiMsg);
       }
     }
     
@@ -587,19 +600,29 @@ Start the conversation with 1-2 concise, thought-provoking sentences. No preambl
       
       // Add user message
       const messages = document.getElementById('chatMessages');
-      messages.innerHTML += `<div class="chat-message user">${message}</div>`;
-      messages.innerHTML += `<div class="chat-message ai">Thinking...</div>`;
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-message user';
+      userMsg.textContent = message;
+      messages.appendChild(userMsg);
+      
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'chat-message ai';
+      aiMsg.textContent = 'Thinking...';
+      messages.appendChild(aiMsg);
+      
       input.value = '';
       
       // Scroll to bottom
       messages.scrollTop = messages.scrollHeight;
       
       try {
-        const prompt = `The user is reading ${passageData.ref}: "${passageData.text}"
+        const prompt = `You are chatting with someone about this Bible passage: ${passageData.ref}
+
+The passage says: "${passageData.text.substring(0, 500)}..."
 
 The user asks: "${message}"
 
-As a thoughtful, wise friend (Keller/Begg/Turek/Graham style), answer their question about this passage. Keep it conversational, honest, not preachy.`;
+Answer their question. Don't use quotes. Be conversational, honest, real.`;
         
         const response = await fetch('/api/chat', {
           method: 'POST',
