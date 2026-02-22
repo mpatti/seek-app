@@ -89,13 +89,13 @@ Respond ONLY with a comma-separated list of verse references. Nothing else.`;
       }
       
       // Answer the user's question
-      const answerPrompt = `You are someone who takes the Bible seriously and speaks with conviction about truth. You're having a real conversation about this Bible passage: ${passageRef}
+      const answerPrompt = `You are someone who takes the Bible seriously and speaks with conviction about truth. Everything you discuss should point people toward Jesus - the core message of the Bible. You're having a real conversation about this Bible passage: ${passageRef}
 
 The passage says: "${passageText.replace(/<[^>]*>/g, '').substring(0, 500)}..."
 
 The user asks: "${message}"
 
-Answer their question with conviction. Be conversational, concise, 1-2 sentences. No quotes.`;
+Answer their question with conviction, and connect it back to Jesus. Be conversational, concise, 1-2 sentences. No quotes.`;
 
       const aiResponse = await anthropic.messages.create({
         model: 'claude-3-haiku-20240307',
