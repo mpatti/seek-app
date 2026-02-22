@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
     
     // If no passage found, try search
     if (passages.length === 0) {
-      const searchUrl = `https://api.esv.org/v3/passage/search/?q=${encodeURIComponent(query)}&per_page=5`;
+      const searchUrl = `https://api.esv.org/v3/passage/search/?q=${encodeURIComponent(query)}&per_page=10`;
       const searchRes = await fetch(searchUrl, {
         headers: { 'Authorization': apiKey }
       });
@@ -54,24 +54,37 @@ module.exports = async function handler(req, res) {
       if (searchRes.ok) {
         const searchData = await searchRes.json();
         if (searchData.results && searchData.results.length > 0) {
-          // Get the first result's full text
-          const firstResult = searchData.results[0];
-          reference = firstResult.reference;
+          // Get full text for all results
+          const formattedResults = [];
           
-          try {
-            const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(firstResult.reference)}&include-passage-references=false&include-footnotes=false&include-heading-titles=false`;
-            const passageRes = await fetch(passageUrl, {
-              headers: { 'Authorization': apiKey }
-            });
-            if (passageRes.ok) {
-              const passageData = await passageRes.json();
-              if (passageData.passages) {
-                passages = passageData.passages;
+          for (const result of searchData.results) {
+            try {
+              const passageUrl = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(result.reference)}&include-passage-references=false&include-footnotes=false&include-heading-titles=false`;
+              const passageRes = await fetch(passageUrl, {
+                headers: { 'Authorization': apiKey }
+              });
+              let text = result.content;
+              if (passageRes.ok) {
+                const passageData = await passageRes.json();
+                if (passageData.passages) {
+                  text = passageData.passages.join('\n\n');
+                }
               }
+              formattedResults.push({
+                reference: result.reference,
+                text: text,
+                preview: text.substring(0, 300) + (text.length > 300 ? '...' : '')
+              });
+            } catch (e) {
+              formattedResults.push({
+                reference: result.reference,
+                text: result.content,
+                preview: result.content.substring(0, 300) + (result.content.length > 300 ? '...' : '')
+              });
             }
-          } catch (e) {
-            passages = [firstResult.content];
           }
+          
+          return res.status(200).json({ results: formattedResults, query });
         }
       }
     }
