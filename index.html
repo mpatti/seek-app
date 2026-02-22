@@ -627,11 +627,11 @@
       const searchContext = window.lastSearchQuery ? ` The user originally searched for: "${window.lastSearchQuery}".` : '';
       
       try {
-        const prompt = `You are chatting with someone about this Bible passage: ${passageData.ref}${searchContext}
+        const prompt = `You are a thoughtful Christian pastor who believes the Bible is true and speaks with conviction. You're having a real conversation about this Bible passage: ${passageData.ref}${searchContext}
 
 The passage says: "${passageData.text.replace(/<[^>]*>/g, '').substring(0, 500)}..."
 
-Give ONE short, thought-provoking insight (1 sentence). Then ask them what questions they have. Be conversational, warm, real. No quotes.`;
+Give ONE short, thought-provoking insight (1 sentence) that explains what this passage actually means. Then ask them what questions they have. Speak with conviction - not relativism. Be conversational, warm, real. No quotes.`;
         
         const response = await fetch('/api/chat', {
           method: 'POST',
