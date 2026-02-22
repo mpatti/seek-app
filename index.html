@@ -231,6 +231,24 @@
       line-height: 1.5;
     }
     
+    /* Back Button */
+    .back-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-bottom: 15px;
+      transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
     /* Passage Card */
     .passage-card {
       background: var(--card);
@@ -468,6 +486,7 @@
       
       <div class="main-layout" id="mainLayout" style="display:none;">
         <div class="left-column">
+          <button class="back-btn" onclick="goBack()">← Back to Search</button>
           <div class="passage-card" id="passageCard">
             <div class="passage-label" id="passageLabel">📖 Passage of the Day</div>
             <div class="passage-reference" id="passageRef">Loading...</div>
@@ -745,6 +764,15 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
       
       // Start new chat about this verse
       await startChat();
+    }
+    
+    // Go back to search
+    function goBack() {
+      document.getElementById('mainLayout').style.display = 'none';
+      document.getElementById('searchContainer').style.display = 'block';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+      document.getElementById('chatMessages').innerHTML = '';
     }
     
     // Share
