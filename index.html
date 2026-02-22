@@ -387,35 +387,8 @@
       <p class="tagline">Truth. Not trends.</p>
     </header>
     
-    <!-- Onboarding -->
-    <div class="onboarding active" id="onboarding">
-      <div class="question-card" id="q1">
-        <div class="question">What brought you here today? 😄</div>
-        <div class="options">
-          <button class="option-btn" data-value="boredom">Just bored, scrolling around</button>
-          <button class="option-btn" data-value="curious">Curious about this Jesus thing</button>
-          <button class="option-btn" data-value="struggling">Something going on in my life</button>
-          <button class="option-btn" data-value="questions">Big questions I can't shake</button>
-          <button class="option-btn" data-value="church">Church wasn't working for me</button>
-        </div>
-      </div>
-      
-      <div class="question-card" id="q2" style="display:none;">
-        <div class="question">What's been on your mind lately?</div>
-        <div class="options">
-          <button class="option-btn" data-value="purpose">Purpose / meaning - what even is life?</button>
-          <button class="option-btn" data-value="relationships">Relationships / loneliness</button>
-          <button class="option-btn" data-value="anxiety">Anxiety / stress / overwhelm</button>
-          <button class="option-btn" data-value="truth">Just want some actual truth for once</button>
-          <button class="option-btn" data-value="other">None of the above, just exploring</button>
-        </div>
-      </div>
-      
-      <button class="continue-btn" id="continueBtn">Continue</button>
-    </div>
-    
     <!-- Main App -->
-    <div class="app" id="app">
+    <div class="app active" id="app">
       <div class="search-container">
         <input type="text" class="search-input" id="searchInput" placeholder="Search Bible verses, topics, or concepts...">
         <div class="search-results" id="searchResults"></div>
@@ -427,24 +400,8 @@
         <div class="passage-text" id="passageText">...</div>
       </div>
       
-      <div class="commentary-card">
-        <div class="commentary-header">
-          <div class="commentary-avatar">📜</div>
-          <div>
-            <div class="commentary-name">Thoughtful Friend</div>
-            <div class="commentary-role">AI Assistant</div>
-          </div>
-        </div>
-        <div class="commentary-text" id="commentaryText">
-          Loading insights...
-        </div>
-      </div>
-      
       <div class="chat-card">
         <div class="chat-messages" id="chatMessages">
-          <div class="chat-message ai">
-            Hey! What questions do you have about today's passage? I'm here to help you think through it.
-          </div>
         </div>
         <div class="chat-input-wrapper">
           <input type="text" class="chat-input" id="chatInput" placeholder="Ask anything...">
@@ -486,28 +443,8 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-    
-    // Onboarding Logic
-    document.querySelectorAll('.option-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const card = btn.closest('.question-card');
-        card.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        answers['q' + currentQuestion] = btn.dataset.value;
-      });
-    });
-    
-    document.getElementById('continueBtn').addEventListener('click', () => {
-      if (currentQuestion === 1) {
-        document.getElementById('q1').style.display = 'none';
-        document.getElementById('q2').style.display = 'block';
-        currentQuestion = 2;
-      } else {
-        // Start the app
-        document.getElementById('onboarding').classList.remove('active');
-        document.getElementById('app').classList.add('active');
-        loadPassage();
-      }
+      // Load today's passage on start
+      loadPassage();
     });
     
     // Search functionality
@@ -587,8 +524,8 @@
           document.getElementById('passageRef').textContent = passageData.ref;
           document.getElementById('passageText').textContent = passageData.text;
           
-          // Generate commentary for the searched passage
-          await generateCommentary();
+          // Start chat for the searched passage
+          await startChat();
         } else {
           document.getElementById('passageText').textContent = 'No results found.';
         }
@@ -605,45 +542,36 @@
       document.getElementById('passageRef').textContent = passageData.ref;
       document.getElementById('passageText').textContent = passageData.text;
       
-      // Generate commentary
-      await generateCommentary();
+      // Start chat with a brief opener
+      await startChat();
     }
     
-    // Generate AI Commentary
-    async function generateCommentary() {
-      const commentaryEl = document.getElementById('commentaryText');
-      commentaryEl.textContent = 'Thinking...';
+    // Start chat with brief opener
+    async function startChat() {
+      const messages = document.getElementById('chatMessages');
+      messages.innerHTML = '<div class="chat-message ai">Thinking...</div>';
       
       try {
-        const prompt = `You are a thoughtful, wise friend explaining this Bible passage to someone genuinely curious about faith. Think of Tim Keller's intellectual depth, Alastair Begg's Scottish clarity, Frank Turek's logical apologetics, and Billy Graham's warmth - but in a fresh, non-religious way that connects with 2026. 
+        const prompt = `You are chatting with someone about this Bible passage: ${passageData.ref}
 
-Passage: ${passageData.ref}
-"${passageData.text}"
+The passage says: "${passageData.text.substring(0, 500)}..."
 
-Write 2-3 paragraphs that:
-1. Explain what the passage actually says (keep it simple)
-2. Why it matters today
-3. How it connects to real life questions
-
-Keep it conversational, not preachy. Don't say "accept Jesus." Just explain truth.`;
+Start the conversation with 1-2 concise, thought-provoking sentences. No preamble. Just jump in with something that makes them think. Be conversational, warm, real.`;
         
-        // Using OpenAI via proxy
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            prompt: prompt
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
         });
         
         const data = await response.json();
+        
         if (data.error) throw new Error(data.error);
-        commentaryEl.textContent = data.content;
+        
+        messages.innerHTML = `<div class="chat-message ai">${data.content}</div>`;
       } catch (error) {
         console.error('Error:', error);
-        commentaryEl.textContent = 'Could not load commentary. Try again soon.';
+        messages.innerHTML = '<div class="chat-message ai">What stands out to you about this passage?</div>';
       }
     }
     
