@@ -36,9 +36,39 @@
     }
     
     .container {
-      max-width: 600px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 20px;
+    }
+    
+    .main-layout {
+      display: flex;
+      gap: 30px;
+      min-height: 500px;
+    }
+    
+    .left-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .right-column {
+      flex: 1;
+      min-width: 0;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    @media (max-width: 800px) {
+      .main-layout {
+        flex-direction: column;
+      }
+      .right-column {
+        max-width: 100%;
+      }
     }
     
     /* Header */
@@ -276,11 +306,15 @@
       border-radius: 20px;
       padding: 20px;
       border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 20px);
     }
     
     .chat-messages {
+      flex: 1;
       min-height: 200px;
-      max-height: 400px;
+      max-height: 500px;
       overflow-y: auto;
       margin-bottom: 15px;
     }
@@ -394,18 +428,24 @@
         <div class="search-results" id="searchResults"></div>
       </div>
       
-      <div class="passage-card" id="passageCard">
-        <div class="passage-label" id="passageLabel">📖 Passage of the Day</div>
-        <div class="passage-reference" id="passageRef">Loading...</div>
-        <div class="passage-text" id="passageText">...</div>
-      </div>
-      
-      <div class="chat-card">
-        <div class="chat-messages" id="chatMessages">
+      <div class="main-layout">
+        <div class="left-column">
+          <div class="passage-card" id="passageCard">
+            <div class="passage-label" id="passageLabel">📖 Passage of the Day</div>
+            <div class="passage-reference" id="passageRef">Loading...</div>
+            <div class="passage-text" id="passageText">...</div>
+          </div>
         </div>
-        <div class="chat-input-wrapper">
-          <input type="text" class="chat-input" id="chatInput" placeholder="Ask anything...">
-          <button class="send-btn" id="sendBtn">→</button>
+        
+        <div class="right-column">
+          <div class="chat-card">
+            <div class="chat-messages" id="chatMessages">
+            </div>
+            <div class="chat-input-wrapper">
+              <input type="text" class="chat-input" id="chatInput" placeholder="Ask anything...">
+              <button class="send-btn" id="sendBtn">→</button>
+            </div>
+          </div>
         </div>
       </div>
       
