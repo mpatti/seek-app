@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { prompt, passageRef, passageText, message } = req.body;
+    const { prompt, passageRef, passageText, message, history } = req.body;
 
     if (!prompt && !message) {
       return res.status(400).json({ error: 'Missing prompt or message' });
@@ -28,6 +28,15 @@ module.exports = async function handler(req, res) {
 
     // If this is a user message, check if they want related verses
     if (message) {
+      // Build conversation context from history
+      let conversationContext = '';
+      if (history && history.length > 0) {
+        const recentHistory = history.slice(-6); // Last 6 messages for context
+        conversationContext = '\n\nRecent conversation:\n' + recentHistory.map(m => 
+          `${m.role === 'user' ? 'User' : 'You'}: ${m.content}`
+        ).join('\n');
+      }
+      
       const userQuery = message.toLowerCase();
       
       // Check if user is asking about a topic that might have related verses
@@ -89,13 +98,14 @@ Respond ONLY with a comma-separated list of verse references. Nothing else.`;
       }
       
       // Answer the user's question
-      const answerPrompt = `You are someone who takes the Bible seriously and speaks with conviction about truth. Everything you discuss should point people toward Jesus - the core message of the Bible. You're having a real conversation about this Bible passage: ${passageRef}
+      const answerPrompt = `You are someone who takes the Bible seriously and speaks with conviction about truth. Everything you discuss should point people toward Jesus - the core message of the Bible.${conversationContext}
 
+Current Bible passage: ${passageRef}
 The passage says: "${passageText.replace(/<[^>]*>/g, '').substring(0, 500)}..."
 
 The user asks: "${message}"
 
-Answer their question with conviction, and connect it back to Jesus. Be conversational, concise, 1-2 sentences. No quotes.`;
+Answer their question with conviction, and connect it back to Jesus. Remember the conversation history above. Be conversational, concise, 1-2 sentences. No quotes.`;
 
       const aiResponse = await anthropic.messages.create({
         model: 'claude-3-haiku-20240307',

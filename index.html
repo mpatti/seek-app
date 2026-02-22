@@ -525,6 +525,7 @@
   <script>
     // App State
     let passageData = null;
+    let chatHistory = [];
     
     // ESV API Config - reads from Vercel environment variables injected at runtime
     const ESV_API_KEY = window.ESV_API_KEY || '';
@@ -643,6 +644,7 @@
     
     // Start chat with brief opener
     async function startChat() {
+      chatHistory = []; // Reset history for new passage
       const messages = document.getElementById('chatMessages');
       messages.innerHTML = '';
       
@@ -703,6 +705,9 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
       userMsg.textContent = message;
       messages.appendChild(userMsg);
       
+      // Add to history
+      chatHistory.push({ role: 'user', content: message });
+      
       const aiMsg = document.createElement('div');
       aiMsg.className = 'chat-message ai';
       aiMsg.textContent = 'Thinking...';
@@ -720,7 +725,8 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
           body: JSON.stringify({
             message: message,
             passageRef: passageData.ref,
-            passageText: passageData.text
+            passageText: passageData.text,
+            history: chatHistory
           })
         });
         
@@ -730,6 +736,9 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
         // Update AI response
         const lastMsg = messages.querySelector('.chat-message.ai:last-child');
         lastMsg.textContent = data.content;
+        
+        // Add to history
+        chatHistory.push({ role: 'assistant', content: data.content });
         
         // Show suggestions if any
         if (data.suggestions && data.suggestions.length > 0) {
@@ -781,6 +790,7 @@ Give ONE short, thought-provoking insight (1 sentence) that explains what this p
       document.getElementById('searchInput').value = '';
       document.getElementById('searchResults').innerHTML = '';
       document.getElementById('chatMessages').innerHTML = '';
+      chatHistory = [];
     }
     
     // Share
