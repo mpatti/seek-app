@@ -332,6 +332,30 @@
     .chat-message {
       margin-bottom: 15px;
       padding: 15px;
+    }
+    
+    .chat-suggestions {
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+    
+    .suggestion-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .suggestion-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
       border-radius: 12px;
       max-width: 85%;
     }
@@ -666,34 +690,59 @@ Give ONE short, thought-provoking insight (1 sentence). Then ask them what quest
       messages.scrollTop = messages.scrollHeight;
       
       try {
-        const prompt = `You are chatting with someone about this Bible passage: ${passageData.ref}
-
-The passage says: "${passageData.text.substring(0, 500)}..."
-
-The user asks: "${message}"
-
-Answer their question. Don't use quotes. Be conversational, honest, real.`;
-        
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: prompt
+            message: message,
+            passageRef: passageData.ref,
+            passageText: passageData.text
           })
         });
         
         const data = await response.json();
         if (data.error) throw new Error(data.error);
-        const lastMsg = messages.querySelector('.chat-message:last-child');
+        
+        // Update AI response
+        const lastMsg = messages.querySelector('.chat-message.ai:last-child');
         lastMsg.textContent = data.content;
+        
+        // Show suggestions if any
+        if (data.suggestions && data.suggestions.length > 0) {
+          const suggestionsDiv = document.createElement('div');
+          suggestionsDiv.className = 'chat-suggestions';
+          suggestionsDiv.innerHTML = `<p style="margin-bottom:8px;color:var(--text-secondary);font-size:0.9rem;">Related verses you might want to explore:</p>`;
+          
+          data.suggestions.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'suggestion-btn';
+            btn.textContent = s.ref;
+            btn.onclick = () => loadSuggestedVerse(s.ref, s.text);
+            suggestionsDiv.appendChild(btn);
+          });
+          
+          messages.appendChild(suggestionsDiv);
+        }
       } catch (error) {
         const lastMsg = messages.querySelector('.chat-message:last-child');
         lastMsg.textContent = 'Could not get a response. Try again.';
       }
       
       messages.scrollTop = messages.scrollHeight;
+    }
+    
+    async function loadSuggestedVerse(ref, text) {
+      // Update passage on left
+      passageData = { ref: ref, text: text };
+      document.getElementById('passageLabel').textContent = '📖 Related Verse';
+      document.getElementById('passageRef').textContent = ref;
+      document.getElementById('passageText').innerHTML = text.replace(/(\d+)/g, '<span class="verse-num">$1</span>').replace(/\n\n/g, '</p><p>').replace(/^(.*)$/, '<p>$1</p>');
+      
+      // Clear suggestions
+      document.querySelectorAll('.chat-suggestions').forEach(el => el.remove());
+      
+      // Start new chat about this verse
+      await startChat();
     }
     
     // Share
