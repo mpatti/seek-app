@@ -201,6 +201,52 @@
       border-color: var(--accent);
     }
     
+    /* Daily Passage */
+    .daily-passage {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    
+    .daily-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    
+    .daily-topic {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .daily-ref {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    
+    .daily-text {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    
+    .daily-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
     .search-results {
       margin-top: 15px;
     }
@@ -487,6 +533,13 @@
     <!-- Main App -->
     <div class="app" id="app">
       <div class="search-container" id="searchContainer">
+        <div class="daily-passage" id="dailyPassage" style="display:none;">
+          <p class="daily-label">Today's Passage</p>
+          <h3 class="daily-topic" id="dailyTopic"></h3>
+          <p class="daily-ref" id="dailyRef"></p>
+          <p class="daily-text" id="dailyText"></p>
+          <button class="daily-btn" onclick="loadDailyPassageFromButton()">Explore This Passage →</button>
+        </div>
         <input type="text" class="search-input" id="searchInput" placeholder="Search any topic or verse...">
         <div class="search-results" id="searchResults"></div>
       </div>
@@ -533,7 +586,33 @@
     
     document.addEventListener('DOMContentLoaded', () => {
       // App starts with just search - nothing else loads until user searches
+      loadDailyPassage();
     });
+    
+    async function loadDailyPassage() {
+      try {
+        const response = await fetch('/api/daily');
+        const data = await response.json();
+        
+        if (data.reference) {
+          document.getElementById('dailyTopic').textContent = data.topic;
+          document.getElementById('dailyRef').textContent = data.reference;
+          document.getElementById('dailyText').textContent = data.text;
+          document.getElementById('dailyPassage').style.display = 'block';
+          
+          // Store for when user clicks
+          window.dailyData = data;
+        }
+      } catch (error) {
+        console.log('Daily passage not available');
+      }
+    }
+    
+    window.loadDailyPassageFromButton = function() {
+      if (window.dailyData) {
+        window.selectSearchResult(window.dailyData.reference, window.dailyData.topic);
+      }
+    };
     
     // Search functionality
     let searchTimeout;
