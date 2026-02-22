@@ -568,10 +568,16 @@
       document.getElementById('commentaryText').textContent = 'Loading...';
       document.getElementById('searchResults').innerHTML = '';
       
+      console.log('Selecting:', reference);
+      
       // Fetch passage text from ESV
       try {
+        console.log('Fetching from /api/search?q=' + encodeURIComponent(reference));
         const response = await fetch(`/api/search?q=${encodeURIComponent(reference)}`);
         const data = await response.json();
+        console.log('Search response:', data);
+        
+        if (data.error) throw new Error(data.error);
         
         if (data.results && data.results[0]) {
           passageData = {
@@ -580,13 +586,15 @@
           };
           document.getElementById('passageRef').textContent = passageData.ref;
           document.getElementById('passageText').textContent = passageData.text;
+          
+          // Generate commentary for the searched passage
+          await generateCommentary();
+        } else {
+          document.getElementById('passageText').textContent = 'No results found.';
         }
-        
-        // Generate commentary for the searched passage
-        await generateCommentary();
       } catch (error) {
         console.error('Error loading passage:', error);
-        document.getElementById('passageText').textContent = 'Could not load passage.';
+        document.getElementById('passageText').textContent = 'Could not load passage: ' + error.message;
       }
     }
     

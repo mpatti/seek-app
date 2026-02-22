@@ -13,6 +13,8 @@ module.exports = async function handler(req, res) {
 
   const query = req.query.q || req.body?.q || '';
   
+  console.log('Search query:', query);
+  
   if (!query) {
     return res.status(400).json({ error: 'Missing query' });
   }
