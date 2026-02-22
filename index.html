@@ -540,18 +540,26 @@
         }
         
         resultsEl.innerHTML = data.results.map(r => `
-          <div class="search-result" onclick="selectSearchResult('${r.reference.replace(/'/g, "\\'")}')">
+          <div class="search-result" data-ref="${r.reference.replace(/"/g, '&quot;')}">
             <div class="search-result-ref">${r.reference}</div>
             <div class="search-result-preview">${r.preview}</div>
           </div>
         `).join('');
+        
+        // Add click handlers
+        document.querySelectorAll('.search-result').forEach(el => {
+          el.addEventListener('click', () => {
+            const ref = el.dataset.ref;
+            window.selectSearchResult(ref);
+          });
+        });
       } catch (error) {
         console.error('Search error:', error);
         resultsEl.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">Search failed. Try again.</div>';
       }
     }
     
-    async function selectSearchResult(reference) {
+    window.selectSearchResult = async function(reference) {
       // Show loading in passage card
       document.getElementById('passageCard').style.display = 'block';
       document.getElementById('passageLabel').textContent = '📖 Search Result';
