@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Seek - Find Truth</title>
+  <!-- Vercel environment variables injection -->
+  <script>
+    window.ESV_API_KEY = "ESV_API_KEY_PLACEHOLDER";
+    window.OPENAI_API_KEY = "OPENAI_API_KEY_PLACEHOLDER";
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -405,9 +410,9 @@
     let currentQuestion = 1;
     let passageData = null;
     
-    // ESV API Config
-    const ESV_API_KEY = process.env.ESV_API_KEY || '';
-    const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
+    // ESV API Config - reads from Vercel environment variables injected at runtime
+    const ESV_API_KEY = window.ESV_API_KEY || '';
+    const OPENAI_KEY = window.OPENAI_API_KEY || '';
     
     // Daily passages (for demo - would be fetched or rotated)
     const passages = [
