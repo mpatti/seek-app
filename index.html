@@ -146,6 +146,57 @@
       display: block;
     }
     
+    /* Search Bar */
+    .search-container {
+      margin-bottom: 20px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+    
+    .search-results {
+      margin-top: 15px;
+    }
+    
+    .search-result {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .search-result:hover {
+      border-color: var(--accent);
+    }
+    
+    .search-result-ref {
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+    
+    .search-result-preview {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
     /* Passage Card */
     .passage-card {
       background: var(--card);
@@ -365,8 +416,13 @@
     
     <!-- Main App -->
     <div class="app" id="app">
-      <div class="passage-card">
-        <div class="passage-label">📖 Passage of the Day</div>
+      <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search Bible verses, topics, or concepts...">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      
+      <div class="passage-card" id="passageCard">
+        <div class="passage-label" id="passageLabel">📖 Passage of the Day</div>
         <div class="passage-reference" id="passageRef">Loading...</div>
         <div class="passage-text" id="passageText">...</div>
       </div>
@@ -454,9 +510,82 @@
       }
     });
     
+    // Search functionality
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      
+      if (query.length < 2) {
+        document.getElementById('searchResults').innerHTML = '';
+        return;
+      }
+      
+      searchTimeout = setTimeout(() => performSearch(query), 500);
+    });
+    
+    async function performSearch(query) {
+      const resultsEl = document.getElementById('searchResults');
+      resultsEl.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">Searching...</div>';
+      
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.error) throw new Error(data.error);
+        
+        if (!data.results || data.results.length === 0) {
+          resultsEl.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">No results found. Try a different search.</div>';
+          return;
+        }
+        
+        resultsEl.innerHTML = data.results.map(r => `
+          <div class="search-result" onclick="selectSearchResult('${r.reference.replace(/'/g, "\\'")}')">
+            <div class="search-result-ref">${r.reference}</div>
+            <div class="search-result-preview">${r.preview}</div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Search error:', error);
+        resultsEl.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">Search failed. Try again.</div>';
+      }
+    }
+    
+    async function selectSearchResult(reference) {
+      // Show loading in passage card
+      document.getElementById('passageCard').style.display = 'block';
+      document.getElementById('passageLabel').textContent = '📖 Search Result';
+      document.getElementById('passageRef').textContent = reference;
+      document.getElementById('passageText').textContent = 'Loading...';
+      document.getElementById('commentaryText').textContent = 'Loading...';
+      document.getElementById('searchResults').innerHTML = '';
+      
+      // Fetch passage text from ESV
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(reference)}`);
+        const data = await response.json();
+        
+        if (data.results && data.results[0]) {
+          passageData = {
+            ref: reference,
+            text: data.results[0].preview
+          };
+          document.getElementById('passageRef').textContent = passageData.ref;
+          document.getElementById('passageText').textContent = passageData.text;
+        }
+        
+        // Generate commentary for the searched passage
+        await generateCommentary();
+      } catch (error) {
+        console.error('Error loading passage:', error);
+        document.getElementById('passageText').textContent = 'Could not load passage.';
+      }
+    }
+    
     // Load Passage
     async function loadPassage() {
       passageData = getTodayPassage();
+      document.getElementById('passageLabel').textContent = '📖 Passage of the Day';
       document.getElementById('passageRef').textContent = passageData.ref;
       document.getElementById('passageText').textContent = passageData.text;
       
