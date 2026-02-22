@@ -1,7 +1,7 @@
-const { OpenAI } = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
 });
 
 module.exports = async function handler(req, res) {
@@ -16,26 +16,25 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { messages, prompt } = req.body;
-    
-    let chatMessages;
-    if (messages) {
-      chatMessages = messages;
-    } else if (prompt) {
-      chatMessages = [{ role: 'user', content: prompt }];
-    } else {
-      return res.status(400).json({ error: 'Missing prompt or messages' });
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt' });
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: chatMessages,
-      max_tokens: 500
+    const message = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }]
     });
 
-    res.status(200).json(completion.choices[0].message);
+    const responseText = message.content[0].type === 'text' 
+      ? message.content[0].text 
+      : JSON.stringify(message.content);
+
+    res.status(200).json({ content: responseText });
   } catch (error) {
-    console.error('OpenAI error:', error);
+    console.error('Anthropic error:', error);
     res.status(500).json({ error: error.message });
   }
 };

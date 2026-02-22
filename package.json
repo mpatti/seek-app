@@ -2,7 +2,7 @@
   "name": "seek-app",
   "version": "1.0.0",
   "dependencies": {
-    "openai": "^4.0.0"
+    "@anthropic-ai/sdk": "^0.24.0"
   },
   "scripts": {
     "build": "node build.js"
