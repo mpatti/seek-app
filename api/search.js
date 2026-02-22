@@ -68,11 +68,20 @@ Respond ONLY with a comma-separated list of verse references. Nothing else. For 
         if (passageRes.ok) {
           const passageData = await passageRes.json();
           if (passageData.passages && passageData.passages.length > 0) {
-            const text = passageData.passages.join('\n\n');
+            let text = passageData.passages.join('\n\n');
+            
+            // Format with verse numbers and paragraphs
+            // Wrap verse numbers in spans for styling
+            text = text.replace(/(\d+)/g, '<span class="verse-num">$1</span>');
+            
+            // Add paragraph breaks
+            text = text.replace(/\n\n/g, '</p><p>');
+            text = '<p>' + text + '</p>';
+            
             results.push({
               reference: passageData.canonical || verse,
               text: text,
-              preview: text.substring(0, 300) + (text.length > 300 ? '...' : '')
+              preview: passageData.passages[0].substring(0, 300) + (passageData.passages[0].length > 300 ? '...' : '')
             });
           }
         }

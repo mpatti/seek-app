@@ -253,8 +253,18 @@
     
     .passage-text {
       font-size: 1.1rem;
-      line-height: 1.8;
+      line-height: 1.9;
       color: var(--text-secondary);
+    }
+    
+    .passage-text p {
+      margin-bottom: 1.2em;
+    }
+    
+    .passage-text .verse-num {
+      color: var(--accent);
+      font-weight: 600;
+      margin-right: 4px;
     }
     
     /* Commentary */
@@ -469,10 +479,10 @@
     
     // Daily passages (for demo - would be fetched or rotated)
     const passages = [
-      { ref: "John 3:16-21", text: "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life. For God did not send his Son into the world to condemn the world, but in order that the world might be saved through him. Whoever believes in him is not condemned, but whoever does not believe is condemned already, because he has not believed in the name of the only Son of God. And this is the judgment: the light has come into the world, and people loved the darkness rather than the light because their works were evil. For everyone who does wicked things hates the light and does not come to the light, lest his works should be exposed. But whoever does what comes to the light to clearly that his works have been carried out in God." },
-      { ref: "Psalm 23", text: "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He leads me in paths of righteousness for his name's sake. Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me. You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows. Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the Lord forever." },
-      { ref: "Romans 8:28", text: "And we know that for those who love God all things work together for good, for those who are called according to his purpose." },
-      { ref: "Matthew 7:7-11", text: "Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you. For everyone who asks receives, and the one who seeks finds, and to the one who knocks it will be opened. Which one of you, if your son asks for bread, will give him a stone? Or if he asks for a fish, will give him a serpent? If you then, who are evil, know how to give good gifts to your children, how much more will your Father who is in heaven give good things to those who ask him!" }
+      { ref: "John 3:16-21", text: "<p><span class=\"verse-num\">16</span>For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life. <span class=\"verse-num\">17</span>For God did not send his Son into the world to condemn the world, but in order that the world might be saved through him. <span class=\"verse-num\">18</span>Whoever believes in him is not condemned, but whoever does not believe is condemned already, because he has not believed in the name of the only Son of God.</p><p><span class=\"verse-num\">19</span>And this is the judgment: the light has come into the world, and people loved the darkness rather than the light because their works were evil. <span class=\"verse-num\">20</span>For everyone who does wicked things hates the light and does not come to the light, lest his works should be exposed. <span class=\"verse-num\">21</span>But whoever does what comes to the light to clearly that his works have been carried out in God.</p>" },
+      { ref: "Psalm 23", text: "<p><span class=\"verse-num\">1</span>The Lord is my shepherd; I shall not want. <span class=\"verse-num\">2</span>He makes me lie down in green pastures. He leads me beside still waters. <span class=\"verse-num\">3</span>He restores my soul. He leads me in paths of righteousness for his name's sake.</p><p><span class=\"verse-num\">4</span>Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me.</p><p><span class=\"verse-num\">5</span>You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows. <span class=\"verse-num\">6</span>Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the Lord forever.</p>" },
+      { ref: "Romans 8:28", text: "<p><span class=\"verse-num\">28</span>And we know that for those who love God all things work together for good, for those who are called according to his purpose.</p>" },
+      { ref: "Matthew 7:7-11", text: "<p><span class=\"verse-num\">7</span>Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you. <span class=\"verse-num\">8</span>For everyone who asks receives, and the one who seeks finds, and to the one who knocks it will be opened.</p><p><span class=\"verse-num\">9</span>Which one of you, if your son asks for bread, will give him a stone? <span class=\"verse-num\">10</span>Or if he asks for a fish, will give him a serpent? <span class=\"verse-num\">11</span>If you then, who are evil, know how to give good gifts to your children, how much more will your Father who is in heaven give good things to those who ask him!</p>" }
     ];
     
     // Get today's passage
@@ -561,7 +571,7 @@
             text: data.results[0].text
           };
           document.getElementById('passageRef').textContent = passageData.ref;
-          document.getElementById('passageText').textContent = passageData.text;
+          document.getElementById('passageText').innerHTML = passageData.text;
           
           // Start chat for the searched passage
           await startChat();
@@ -579,7 +589,7 @@
       passageData = getTodayPassage();
       document.getElementById('passageLabel').textContent = '📖 Passage of the Day';
       document.getElementById('passageRef').textContent = passageData.ref;
-      document.getElementById('passageText').textContent = passageData.text;
+      document.getElementById('passageText').innerHTML = passageData.text;
       
       // Start chat with a brief opener
       await startChat();
