@@ -468,6 +468,23 @@
       text-align: center;
       margin-top: 12px;
     }
+
+    .disclaimer-link {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      color: var(--accent);
+      font-size: inherit;
+      font-family: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .disclaimer-link:hover {
+      color: #f4d77d;
+    }
     
     .chat-input {
       flex: 1;
@@ -512,6 +529,163 @@
       border-radius: 30px;
       font-size: 0.9rem;
       cursor: pointer;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      width: min(760px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-card h3 {
+      margin-bottom: 10px;
+      font-size: 1.4rem;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .modal-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .modal-note {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 10px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .modal-search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .modal-input {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .modal-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal-search-btn {
+      border: none;
+      background: var(--accent);
+      color: #111;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text);
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .church-results {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .church-result {
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .church-name-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .church-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .church-distance {
+      font-size: 0.82rem;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .church-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .church-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .church-actions a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.84rem;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .church-actions a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .church-empty {
+      color: var(--text-secondary);
+      padding: 8px 0;
+    }
+
+    @media (max-width: 640px) {
+      .modal-search-row {
+        grid-template-columns: 1fr;
+      }
     }
     
     /* Loading */
@@ -574,7 +748,7 @@
               <input type="text" class="chat-input" id="chatInput" placeholder="Ask anything...">
               <button class="send-btn" id="sendBtn">→</button>
             </div>
-            <p class="chat-disclaimer">Chat with AI. For spiritual matters, consult a pastor or church community.</p>
+            <p class="chat-disclaimer">I'm just a bot. <button class="disclaimer-link" id="communityLink" type="button">Connect with real humans in community.</button></p>
           </div>
         </div>
       </div>
@@ -584,6 +758,20 @@
           📤 Share Seek with a Friend
         </button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="churchModal" style="display:none;" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="churchModalTitle">
+      <button class="modal-close" id="churchModalClose" type="button" aria-label="Close">×</button>
+      <h3 id="churchModalTitle">Find Christian community near you</h3>
+      <p class="modal-subtitle">Enter your city or ZIP, and we'll suggest 3-5 nearby churches to explore.</p>
+      <div class="modal-search-row">
+        <input type="text" id="churchLocationInput" class="modal-input" placeholder="City or ZIP code">
+        <button type="button" id="churchSearchBtn" class="modal-search-btn">Find Churches</button>
+      </div>
+      <p class="modal-note">We can suggest nearby options, but we can't verify theology or church health automatically. Pray, visit, and discern in real community.</p>
+      <div id="churchResults" class="church-results"></div>
     </div>
   </div>
   
@@ -597,8 +785,120 @@
     const OPENAI_KEY = window.OPENAI_API_KEY || '';
     
     document.addEventListener('DOMContentLoaded', () => {
-      // App starts with just search input
+      document.getElementById('communityLink')?.addEventListener('click', openChurchModal);
+      document.getElementById('churchModalClose')?.addEventListener('click', closeChurchModal);
+      document.getElementById('churchSearchBtn')?.addEventListener('click', findChurches);
+
+      document.getElementById('churchLocationInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') findChurches();
+      });
+
+      document.getElementById('churchModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'churchModal') closeChurchModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeChurchModal();
+      });
     });
+
+    function openChurchModal() {
+      const modal = document.getElementById('churchModal');
+      const results = document.getElementById('churchResults');
+      const input = document.getElementById('churchLocationInput');
+      if (!modal || !results || !input) return;
+
+      results.innerHTML = '<p class="church-empty">Enter your city or ZIP to get started.</p>';
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => input.focus(), 20);
+    }
+
+    function closeChurchModal() {
+      const modal = document.getElementById('churchModal');
+      if (!modal || modal.style.display === 'none') return;
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function escapeHtml(text = '') {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function churchCard(church) {
+      const distance = Number(church.distanceKm || 0).toFixed(1);
+      const safeName = escapeHtml(church.name || 'Church');
+      const safeAddress = escapeHtml(church.address || 'Address not listed');
+      const safeDenomination = church.denomination ? `• ${escapeHtml(church.denomination)}` : '';
+      const mapQuery = encodeURIComponent(`${church.name} ${church.address || ''}`.trim());
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+      const websiteUrl = church.website && /^https?:\/\//i.test(church.website)
+        ? church.website
+        : church.website
+          ? `https://${church.website}`
+          : '';
+
+      return `
+        <article class="church-result">
+          <div class="church-name-row">
+            <div class="church-name">${safeName}</div>
+            <div class="church-distance">${distance} km away</div>
+          </div>
+          <div class="church-meta">
+            ${safeAddress} ${safeDenomination}
+          </div>
+          <div class="church-actions">
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">Directions</a>
+            ${websiteUrl ? `<a href="${escapeHtml(websiteUrl)}" target="_blank" rel="noopener noreferrer">Website</a>` : ''}
+          </div>
+        </article>
+      `;
+    }
+
+    async function findChurches() {
+      const input = document.getElementById('churchLocationInput');
+      const results = document.getElementById('churchResults');
+      const btn = document.getElementById('churchSearchBtn');
+      if (!input || !results || !btn) return;
+
+      const q = input.value.trim();
+      if (!q) {
+        results.innerHTML = '<p class="church-empty">Please enter a city or ZIP code.</p>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Searching...';
+      results.innerHTML = '<p class="church-empty">Looking for nearby churches...</p>';
+
+      try {
+        const response = await fetch(`/api/churches?q=${encodeURIComponent(q)}`);
+        const data = await response.json();
+
+        if (data.error) throw new Error(data.error);
+
+        if (!data.churches || data.churches.length === 0) {
+          results.innerHTML = '<p class="church-empty">No nearby matches found. Try a nearby city or a larger ZIP area.</p>';
+          return;
+        }
+
+        const list = data.churches.slice(0, 5).map(churchCard).join('');
+        results.innerHTML = `
+          <p class="church-empty" style="padding-top:0;">Near <strong>${escapeHtml(data.location || q)}</strong></p>
+          ${list}
+        `;
+      } catch (error) {
+        results.innerHTML = `<p class="church-empty">${error.message || 'Could not load churches right now.'}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Find Churches';
+      }
+    }
     
     // Search functionality
     let searchTimeout;
