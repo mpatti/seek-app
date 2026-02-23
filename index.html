@@ -551,13 +551,6 @@
     <!-- Main App -->
     <div class="app" id="app">
       <div class="search-container" id="searchContainer">
-        <div class="daily-passage" id="dailyPassage" style="display:none;">
-          <p class="daily-label">Today's Passage</p>
-          <h3 class="daily-topic" id="dailyTopic"></h3>
-          <p class="daily-ref" id="dailyRef"></p>
-          <p class="daily-text" id="dailyText"></p>
-          <button class="daily-btn" onclick="loadDailyPassageFromButton()">Explore This Passage →</button>
-        </div>
         <input type="text" class="search-input" id="searchInput" placeholder="Search any topic or verse...">
         <div class="search-results" id="searchResults"></div>
       </div>
@@ -604,34 +597,8 @@
     const OPENAI_KEY = window.OPENAI_API_KEY || '';
     
     document.addEventListener('DOMContentLoaded', () => {
-      // App starts with just search - nothing else loads until user searches
-      loadDailyPassage();
+      // App starts with just search input
     });
-    
-    async function loadDailyPassage() {
-      try {
-        const response = await fetch('/api/daily');
-        const data = await response.json();
-        
-        if (data.reference) {
-          document.getElementById('dailyTopic').textContent = data.topic;
-          document.getElementById('dailyRef').textContent = data.reference;
-          document.getElementById('dailyText').textContent = data.text;
-          document.getElementById('dailyPassage').style.display = 'block';
-          
-          // Store for when user clicks
-          window.dailyData = data;
-        }
-      } catch (error) {
-        console.log('Daily passage not available');
-      }
-    }
-    
-    window.loadDailyPassageFromButton = function() {
-      if (window.dailyData) {
-        window.selectSearchResult(window.dailyData.reference, window.dailyData.topic);
-      }
-    };
     
     // Search functionality
     let searchTimeout;
