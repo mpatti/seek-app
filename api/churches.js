@@ -31,6 +31,86 @@ function buildAddress(tags = {}) {
   return parts.join(', ');
 }
 
+async function geocodeLocation(query) {
+  const q = query.trim();
+  const isUSZip = /^\d{5}(?:-\d{4})?$/.test(q);
+
+  // If user enters a ZIP, force a US lookup first so 28078 doesn't map to Italy.
+  if (isUSZip) {
+    const zip = q.slice(0, 5);
+    const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`, {
+      headers: {
+        'User-Agent': 'seek-app/1.0 (church-finder)',
+        Accept: 'application/json'
+      }
+    });
+
+    if (zipRes.ok) {
+      const zipData = await zipRes.json();
+      const place = zipData?.places?.[0];
+      const lat = Number(place?.latitude);
+      const lon = Number(place?.longitude);
+
+      if (place && Number.isFinite(lat) && Number.isFinite(lon)) {
+        const city = place['place name'];
+        const state = place['state abbreviation'];
+        return {
+          lat,
+          lon,
+          displayName: `${city}, ${state} ${zip}, USA`
+        };
+      }
+    }
+
+    // Fallback: still bias to US if zippopotam misses.
+    const nomRes = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(zip)}`,
+      {
+        headers: {
+          'User-Agent': 'seek-app/1.0 (church-finder)',
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    if (nomRes.ok) {
+      const nomData = await nomRes.json();
+      const place = nomData?.[0];
+      if (place) {
+        return {
+          lat: Number(place.lat),
+          lon: Number(place.lon),
+          displayName: place.display_name || `${zip}, USA`
+        };
+      }
+    }
+  }
+
+  // Generic city/location lookup
+  const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
+  const geoRes = await fetch(geocodeUrl, {
+    headers: {
+      'User-Agent': 'seek-app/1.0 (church-finder)',
+      Accept: 'application/json'
+    }
+  });
+
+  if (!geoRes.ok) {
+    throw new Error('Could not find that location.');
+  }
+
+  const geoData = await geoRes.json();
+  const place = geoData?.[0];
+
+  if (!place) return null;
+
+  return {
+    lat: Number(place.lat),
+    lon: Number(place.lon),
+    displayName: place.display_name || q
+  };
+}
+
 module.exports = async function handler(req, res) {
   setCors(res);
 
@@ -45,27 +125,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
-    const geoRes = await fetch(geocodeUrl, {
-      headers: {
-        'User-Agent': 'seek-app/1.0 (church-finder)',
-        Accept: 'application/json'
-      }
-    });
+    const place = await geocodeLocation(q);
 
-    if (!geoRes.ok) {
-      throw new Error('Could not find that location.');
-    }
-
-    const geoData = await geoRes.json();
-    const place = geoData?.[0];
-
-    if (!place) {
+    if (!place || !Number.isFinite(place.lat) || !Number.isFinite(place.lon)) {
       return res.status(200).json({ location: q, churches: [] });
     }
 
-    const lat = Number(place.lat);
-    const lon = Number(place.lon);
+    const lat = place.lat;
+    const lon = place.lon;
 
     const overpassQuery = `
 [out:json][timeout:25];
@@ -132,7 +199,7 @@ out center tags 60;
     }
 
     return res.status(200).json({
-      location: place.display_name || q,
+      location: place.displayName || q,
       churches: deduped
     });
   } catch (error) {
